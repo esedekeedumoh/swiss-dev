@@ -1,11 +1,16 @@
-import Hero from "@/components/custom/Hero";
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import React from 'react';
+import dynamic from 'next/dynamic';
 
-export default function Home() {
+const ChatView = dynamic(() => import('../components/custom/ChatView'), { ssr: false });
+const CodeView = dynamic(() => import('../components/custom/CodeView'), { ssr: false });
+
+const Page = () => {
   return (
-    <div> 
-      <Hero />
-    </div>
+    <>
+      <ChatView />
+      <CodeView />
+    </>
   );
-}
+};
+
+export default Page;
