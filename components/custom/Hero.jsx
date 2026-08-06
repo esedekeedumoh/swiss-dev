@@ -79,87 +79,103 @@ function Hero() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-950 relative overflow-hidden">
-            {/* Animated background elements */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]">
-                <div className="absolute left-1/2 top-0 h-[500px] w-[1000px] -translate-x-1/2 bg-[radial-gradient(circle_400px_at_50%_300px,#3b82f625,transparent)]" />
-            </div>
+        <div className="min-h-screen bg-background relative overflow-hidden theme-transition">
+            {/* Adaptive background: dot-grid (light) / line-grid (dark) */}
+            <div className="absolute inset-0 dot-grid dark:hidden pointer-events-none" />
+            <div className="absolute inset-0 grid-bg hidden dark:block pointer-events-none" />
+            {/* Warm radial glow */}
+            <div className="absolute inset-0 glow-top pointer-events-none" />
 
-            <div className="container mx-auto px-4 py-16 relative z-10">
+            <div className="container mx-auto px-4 py-20 relative z-10">
                 <div className="flex flex-col items-center justify-center space-y-12">
+
                     {/* Hero Header */}
-                    <div className="text-center space-y-6">
-                        <div className="inline-flex items-center justify-center space-x-2 bg-electric-blue-500/20 rounded-full px-6 py-3 mb-6 border border-electric-blue-500/30">
-                            <Sparkles className="h-6 w-6 text-electric-blue-400" />
-                            <span className="text-electric-blue-400 text-lg font-semibold tracking-wide">
-                                NEXT-GEN AI DEVELOPMENT
+                    <div className="text-center space-y-5 max-w-4xl">
+                        <div className="inline-flex items-center justify-center space-x-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-2">
+                            <Sparkles className="h-4 w-4 text-primary" />
+                            <span className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
+                                Next-Gen AI Development
                             </span>
                         </div>
-                        <h1 className="text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-[linear-gradient(45deg,#60a5fa_30%,#ec4899)] leading-tight">
-                            Code the <br className="md:hidden" />Impossible
+
+                        <h1 className="font-display text-6xl md:text-7xl font-normal text-foreground leading-[1.08] tracking-tight">
+                            Code the{' '}
+                            <span className="text-gradient italic">Impossible</span>
                         </h1>
-                        <p className="text-xl text-neon-cyan max-w-3xl mx-auto font-mono tracking-tight">
-                            Transform your wildest ideas into production-ready code with Ai-powered assistance
+
+                        <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed font-normal">
+                            Describe your vision and our AI will craft production-ready websites — beautifully, instantly.
                         </p>
                     </div>
 
-                    {/* Modified Input Section */}
-                    <div className="w-full max-w-3xl bg-gray-900/40 backdrop-blur-2xl rounded-xl border-2 border-electric-blue-500/40 shadow-[0_0_40px_5px_rgba(59,130,246,0.15)]">
-                        <div className="p-2 bg-gradient-to-r from-electric-blue-500/10 to-purple-500/10">
-                            <div className="bg-gray-900/80 p-6 rounded-lg">
-                                <div className="flex gap-4">
-                                    <textarea
-                                        placeholder="DESCRIBE YOUR VISION..."
-                                        value={userInput}
-                                        onChange={(e) => setUserInput(e.target.value)}
-                                        className="w-full bg-transparent border-2 border-electric-blue-500/30 rounded-lg p-5 text-gray-100 placeholder-electric-blue-500/60 focus:border-electric-blue-500 focus:ring-0 outline-none font-mono text-lg h-40 resize-none transition-all duration-300 hover:border-electric-blue-500/60"
-                                        disabled={isEnhancing}
-                                    />
-                                    <div className="flex flex-col gap-2">
-                                        {userInput && (
-                                            <>
-                                                <button
-                                                    onClick={enhancePrompt}
-                                                    disabled={isEnhancing}
-                                                    className={`flex items-center justify-center bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl px-4 py-4 transition-all duration-200 ${isEnhancing ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                                >
-                                                    {isEnhancing ? (
-                                                        <Loader2 className="h-8 w-8 animate-spin" />
-                                                    ) : (
-                                                        <Wand2 className="h-8 w-8" />
-                                                    )}
-                                                </button>
-                                                <button
-                                                    onClick={() => onGenerate(userInput)}
-                                                    disabled={isEnhancing}
-                                                    className={`flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl px-4 py-4 transition-all duration-200 ${isEnhancing ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                                >
-                                                    <Send className="h-8 w-8" />
-                                                </button>
-                                            </>
-                                        )}
+                    {/* Input Section */}
+                    <div className="w-full max-w-2xl">
+                        <div className="bg-card border border-border rounded-2xl shadow-panel overflow-hidden theme-transition">
+                            <div className="p-1.5 bg-gradient-to-r from-primary/8 via-accent/8 to-primary/8">
+                                <div className="bg-card rounded-xl p-5">
+                                    <div className="flex gap-3">
+                                        <textarea
+                                            id="hero-prompt-input"
+                                            placeholder="Describe your website…"
+                                            value={userInput}
+                                            onChange={(e) => setUserInput(e.target.value)}
+                                            className="w-full bg-background border border-border rounded-xl p-4 text-foreground placeholder-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/15 outline-none font-normal text-sm h-32 resize-none transition-all duration-200 leading-relaxed"
+                                            disabled={isEnhancing}
+                                        />
+                                        <div className="flex flex-col gap-2">
+                                            {userInput && (
+                                                <>
+                                                    <button
+                                                        id="enhance-prompt-btn"
+                                                        onClick={enhancePrompt}
+                                                        disabled={isEnhancing}
+                                                        title="Enhance with AI"
+                                                        className={`flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl px-4 py-4 transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 ${isEnhancing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                    >
+                                                        {isEnhancing ? (
+                                                            <Loader2 className="h-6 w-6 animate-spin" />
+                                                        ) : (
+                                                            <Wand2 className="h-6 w-6" />
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        id="generate-btn"
+                                                        onClick={() => onGenerate(userInput)}
+                                                        disabled={isEnhancing}
+                                                        title="Generate website"
+                                                        className={`flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl px-4 py-4 transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105 active:scale-95 ${isEnhancing ? 'opacity-60 cursor-not-allowed' : ''}`}
+                                                    >
+                                                        <Send className="h-6 w-6" />
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                                <div className="flex justify-end mt-4">
-                                    <Link className="h-6 w-6 text-electric-blue-400/80 hover:text-electric-blue-400 transition-colors duration-200" />
+                                    <div className="flex justify-end mt-3">
+                                        <Link className="h-5 w-5 text-muted-foreground hover:text-primary transition-colors duration-200 cursor-pointer" />
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Holographic Suggestions Grid */}
-                    <div className="w-full max-w-5xl">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Suggestions Grid */}
+                    <div className="w-full max-w-4xl">
+                        <p className="text-center text-[10px] text-muted-foreground mb-5 font-semibold uppercase tracking-[0.2em]">
+                            Start with a template
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
                             {Lookup?.SUGGSTIONS.map((suggestion, index) => (
                                 <button
                                     key={index}
+                                    id={`suggestion-${index}`}
                                     onClick={() => onSuggestionClick(suggestion)}
-                                    className="group relative p-6 bg-gray-900/50 hover:bg-gray-800/60 border-2 border-electric-blue-500/20 rounded-xl text-left transition-all duration-300 hover:border-electric-blue-500/40 hover:shadow-[0_0_20px_2px_rgba(59,130,246,0.2)]"
+                                    className="group relative p-4 bg-card hover:bg-secondary border border-border hover:border-primary/30 rounded-xl text-left transition-all duration-200 hover:shadow-card theme-transition text-start"
                                 >
-                                    <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_50%,#3b82f620)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
-                                    <span className="text-electric-blue-400/80 group-hover:text-electric-blue-400 font-mono text-sm tracking-wide transition-colors duration-300">
+                                    <span className="text-muted-foreground group-hover:text-foreground font-normal text-sm leading-snug transition-colors duration-200 line-clamp-2">
                                         {suggestion}
                                     </span>
+                                    <ArrowRight className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 translate-x-0 group-hover:translate-x-0.5 transition-all duration-200 mt-2" />
                                 </button>
                             ))}
                         </div>
@@ -170,4 +186,4 @@ function Hero() {
     );
 }
 
-export default Hero;
+export default Hero;
