@@ -1,5 +1,6 @@
 "use client"
 import React, { useContext, useState, useEffect, useCallback, memo } from 'react';
+import { useTheme } from 'next-themes';
 import dynamic from 'next/dynamic';
 import Lookup from '@/data/Lookup';
 import { MessagesContext } from '@/context/MessagesContext';
@@ -25,6 +26,8 @@ function CodeView() {
     const UpdateFiles = useMutation(api.workspace.UpdateFiles);
     const convex = useConvex();
     const [loading, setLoading] = useState(false);
+    const { resolvedTheme } = useTheme();
+    const sandpackTheme = resolvedTheme === 'light' ? 'light' : 'dark';
 
     const preprocessFiles = useCallback((files) => {
         const processed = {};
@@ -180,35 +183,46 @@ function CodeView() {
 
     return (
         <div className='relative'>
-            <div className='bg-[#181818] w-full p-2 border'>
+            <div className='bg-card w-full p-3 border-b border-border theme-transition'>
                 <div className='flex items-center justify-between'>
-                    <div className='flex items-center flex-wrap shrink-0 bg-black p-1 justify-center
-                    w-[140px] gap-3 rounded-full'>
-                        <h2 onClick={() => setActiveTab('code')}
-                            className={`text-sm cursor-pointer 
-                        ${activeTab == 'code' && 'text-blue-500 bg-blue-500 bg-opacity-25 p-1 px-2 rounded-full'}`}>
-                            Code</h2>
-
-                        <h2 onClick={() => setActiveTab('preview')}
-                            className={`text-sm cursor-pointer 
-                        ${activeTab == 'preview' && 'text-blue-500 bg-blue-500 bg-opacity-25 p-1 px-2 rounded-full'}`}>
-                            Preview</h2>
+                    <div className='flex items-center bg-secondary p-1 rounded-full gap-1'>
+                        <button
+                            id="tab-code"
+                            onClick={() => setActiveTab('code')}
+                            className={`text-sm font-medium px-4 py-1.5 rounded-full transition-all duration-200 ${
+                                activeTab === 'code'
+                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}>
+                            Code
+                        </button>
+                        <button
+                            id="tab-preview"
+                            onClick={() => setActiveTab('preview')}
+                            className={`text-sm font-medium px-4 py-1.5 rounded-full transition-all duration-200 ${
+                                activeTab === 'preview'
+                                    ? 'bg-primary text-primary-foreground shadow-sm'
+                                    : 'text-muted-foreground hover:text-foreground'
+                            }`}>
+                            Preview
+                        </button>
                     </div>
-                    
+
                     {/* Download Button */}
                     <button
+                        id="download-files-btn"
                         onClick={downloadFiles}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full transition-colors duration-200"
+                        className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm"
                     >
                         <Download className="h-4 w-4" />
-                        <span>Download Files</span>
+                        <span>Download</span>
                     </button>
                 </div>
             </div>
             <SandpackProvider 
             files={files}
             template="react" 
-            theme={'dark'}
+            theme={sandpackTheme}
             customSetup={{
                 dependencies: {
                     ...Lookup.DEPENDANCY
@@ -245,10 +259,10 @@ function CodeView() {
                 </div>
             </SandpackProvider>
 
-            {loading&&<div className='p-10 bg-gray-900 opacity-80 absolute top-0 
-            rounded-lg w-full h-full flex items-center justify-center'>
-                <Loader2Icon className='animate-spin h-10 w-10 text-white'/>
-                <h2 className='text-white'> Generating files...</h2>
+            {loading && <div className='p-10 bg-background/90 dark:bg-gray-900/90 backdrop-blur-sm absolute top-0 
+            rounded-lg w-full h-full flex flex-col items-center justify-center gap-3'>
+                <Loader2Icon className='animate-spin h-10 w-10 text-primary'/>
+                <h2 className='text-foreground font-medium'> Generating files...</h2>
             </div>}
         </div>
     );

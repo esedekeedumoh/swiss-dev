@@ -12,21 +12,21 @@ import ReactMarkdown from 'react-markdown';
 
 const MessageItem = memo(({ msg, index }) => (
     <div
-        className={`p-4 rounded-lg ${
-            msg.role === 'user' 
-                ? 'bg-gray-800/50 border border-gray-700' 
-                : 'bg-gray-800/30 border border-gray-700'
+        className={`p-4 rounded-xl border theme-transition ${
+            msg.role === 'user'
+                ? 'bg-secondary border-border'
+                : 'bg-card border-border'
         }`}
     >
         <div className="flex items-start gap-3">
-            <div className={`p-2 rounded-lg ${
-                msg.role === 'user' 
-                    ? 'bg-blue-500/20 text-blue-400' 
-                    : 'bg-purple-500/20 text-purple-400'
+            <div className={`px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wide shrink-0 ${
+                msg.role === 'user'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-accent/15 text-accent'
             }`}>
                 {msg.role === 'user' ? 'You' : 'AI'}
             </div>
-            <ReactMarkdown className="prose prose-invert flex-1 overflow-auto">
+            <ReactMarkdown className="prose dark:prose-invert prose-sm flex-1 overflow-auto max-w-none text-foreground">
                 {msg.content}
             </ReactMarkdown>
         </div>
@@ -139,7 +139,7 @@ function ChatView() {
     }, [setMessages]);
 
     return (
-        <div className="relative h-[85vh] flex flex-col bg-gray-900">
+        <div className="relative h-[85vh] flex flex-col bg-background theme-transition">
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto scrollbar-hide p-4">
                 <div className="max-w-4xl mx-auto space-y-4">
@@ -148,10 +148,10 @@ function ChatView() {
                     ))}
                     
                     {loading && (
-                        <div className="p-4 rounded-lg bg-gray-800/30 border border-gray-700">
-                            <div className="flex items-center gap-3 text-gray-400">
+                        <div className="p-4 rounded-xl bg-card border border-border">
+                            <div className="flex items-center gap-3 text-muted-foreground">
                                 <Loader2Icon className="animate-spin h-5 w-5" />
-                                <p className="font-medium">Generating response...</p>
+                                <p className="font-medium text-sm">Generating response...</p>
                             </div>
                         </div>
                     )}
@@ -159,27 +159,29 @@ function ChatView() {
             </div>
 
             {/* Input Section */}
-            <div className="border-t border-gray-800 bg-gray-900/50 backdrop-blur-sm p-4">
+            <div className="border-t border-border bg-background/80 backdrop-blur-sm p-4 theme-transition">
                 <div className="max-w-4xl mx-auto">
-                    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-4">
+                    <div className="bg-card border border-border rounded-xl p-4 shadow-sm">
                         <div className="flex gap-3">
                             <textarea
-                                placeholder="Type your message here..."
+                                id="chat-input"
+                                placeholder="Ask a follow-up or describe a change..."
                                 value={userInput}
                                 onChange={(event) => setUserInput(event.target.value)}
-                                className="w-full bg-gray-900/50 border border-gray-700 rounded-xl p-4 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200 resize-none h-32"
+                                className="w-full bg-background border border-border rounded-xl p-4 text-foreground placeholder-muted-foreground focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all duration-200 resize-none h-24 text-sm"
                             />
                             {userInput && (
                                 <button
+                                    id="chat-send-btn"
                                     onClick={() => onGenerate(userInput)}
-                                    className="flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl px-4 transition-all duration-200"
+                                    className="flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-xl px-4 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md"
                                 >
-                                    <Send className="h-6 w-6 text-white" />
+                                    <Send className="h-5 w-5" />
                                 </button>
                             )}
                         </div>
                         <div className="flex justify-end mt-3">
-                            <Link className="h-5 w-5 text-gray-400 hover:text-gray-300 transition-colors duration-200" />
+                            <Link className="h-4 w-4 text-muted-foreground hover:text-primary transition-colors duration-200 cursor-pointer" />
                         </div>
                     </div>
                 </div>
