@@ -9,6 +9,13 @@ export default {
   theme: {
   	extend: {
   		colors: {
+			googleAnti: {
+				ink: 'var(--googleAnti-ink, #0F111A)',
+				cloud: 'var(--googleAnti-cloud, #1E2130)',
+				blue: 'var(--googleAnti-blue, #3B82F6)',
+				green: 'var(--googleAnti-green, #10B981)',
+				purple: 'var(--googleAnti-purple, #8B5CF6)',
+			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

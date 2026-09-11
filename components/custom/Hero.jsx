@@ -1,173 +1,32 @@
-"use client"
-import Lookup from '@/data/Lookup';
-import { MessagesContext } from '@/context/MessagesContext';
-import { ArrowRight, Link, Sparkles, Send, Wand2, Loader2 } from 'lucide-react';
-import React, { useContext, useState } from 'react';
-import { useMutation } from 'convex/react';
-import { api } from '@/convex/_generated/api';
-import { useRouter } from 'next/navigation';
+"use client";
 
-function Hero() {
-    const [userInput, setUserInput] = useState('');
-    const [isEnhancing, setIsEnhancing] = useState(false);
-    const { messages, setMessages } = useContext(MessagesContext);
-    const CreateWorkspace = useMutation(api.workspace.CreateWorkspace);
-    const router = useRouter();
+import { ArrowRight, Check, Download, Laptop, MonitorDown, Sparkles, Zap } from "lucide-react";
+import Link from "next/link";
+import { SessionContext } from "@/app/provider";
+import supabase from "@/lib/supabaseClient";
+import { useContext } from "react";
 
-    const onGenerate = async (input) => {
-        const msg = {
-            role: 'user',
-            content: input
-        }
-        setMessages(msg);
-        const workspaceID = await CreateWorkspace({
-            messages: [msg]
-        });
-        router.push('/workspace/' + workspaceID);
-    }
+const plans = [
+    { name: "Free", price: "$0", detail: "For exploring the workspace", items: ["1 basic AI model", "2 hours coding per day", "No custom domains", "Made on Swiss branding"], cta: "Start free" },
+    { name: "Builder", price: "$7.99", detail: "For shipping real projects", items: ["Higher AI models", "6 hours runtime per day", "5 custom domains / month", "Up to 3 agents", "Remove Swiss branding"], cta: "Choose Builder", featured: true },
+    { name: "Pro", price: "$21.99", detail: "For serious product teams", items: ["Best AI models", "Unlimited build runtime", "Unlimited publishing and domains", "Unlimited agents", "Remove Swiss branding"], cta: "Choose Pro" },
+];
 
-    const enhancePrompt = async () => {
-        if (!userInput) return;
-        
-        setIsEnhancing(true);
-        try {
-            const response = await fetch('/api/enhance-prompt', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ prompt: userInput }),
-            });
-
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-            let enhancedText = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                const chunk = decoder.decode(value);
-                const lines = chunk.split('\n');
-
-                for (const line of lines) {
-                    if (line.startsWith('data: ')) {
-                        try {
-                            const data = JSON.parse(line.slice(6));
-                            if (data.chunk) {
-                                enhancedText += data.chunk;
-                                setUserInput(enhancedText);
-                            }
-                            if (data.done && data.enhancedPrompt) {
-                                setUserInput(data.enhancedPrompt);
-                            }
-                        } catch (e) {
-                            // Skip invalid JSON
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error enhancing prompt:', error);
-        } finally {
-            setIsEnhancing(false);
-        }
-    };
-
-    const onSuggestionClick = (suggestion) => {
-        setUserInput(suggestion);
-    };
-
+export default function Hero() {
+    const { session } = useContext(SessionContext);
     return (
-        <div className="min-h-screen bg-gray-950 relative overflow-hidden">
-            {/* Animated background elements */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f2e_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f2e_1px,transparent_1px)] bg-[size:14px_24px]">
-                <div className="absolute left-1/2 top-0 h-[500px] w-[1000px] -translate-x-1/2 bg-[radial-gradient(circle_400px_at_50%_300px,#3b82f625,transparent)]" />
-            </div>
-
-            <div className="container mx-auto px-4 py-16 relative z-10">
-                <div className="flex flex-col items-center justify-center space-y-12">
-                    {/* Hero Header */}
-                    <div className="text-center space-y-6">
-                        <div className="inline-flex items-center justify-center space-x-2 bg-electric-blue-500/20 rounded-full px-6 py-3 mb-6 border border-electric-blue-500/30">
-                            <Sparkles className="h-6 w-6 text-electric-blue-400" />
-                            <span className="text-electric-blue-400 text-lg font-semibold tracking-wide">
-                                NEXT-GEN AI DEVELOPMENT
-                            </span>
-                        </div>
-                        <h1 className="text-6xl md:text-7xl font-bold text-transparent bg-clip-text bg-[linear-gradient(45deg,#60a5fa_30%,#ec4899)] leading-tight">
-                            Code the <br className="md:hidden" />Impossible
-                        </h1>
-                        <p className="text-xl text-neon-cyan max-w-3xl mx-auto font-mono tracking-tight">
-                            Transform your wildest ideas into production-ready code with Ai-powered assistance
-                        </p>
-                    </div>
-
-                    {/* Modified Input Section */}
-                    <div className="w-full max-w-3xl bg-gray-900/40 backdrop-blur-2xl rounded-xl border-2 border-electric-blue-500/40 shadow-[0_0_40px_5px_rgba(59,130,246,0.15)]">
-                        <div className="p-2 bg-gradient-to-r from-electric-blue-500/10 to-purple-500/10">
-                            <div className="bg-gray-900/80 p-6 rounded-lg">
-                                <div className="flex gap-4">
-                                    <textarea
-                                        placeholder="DESCRIBE YOUR VISION..."
-                                        value={userInput}
-                                        onChange={(e) => setUserInput(e.target.value)}
-                                        className="w-full bg-transparent border-2 border-electric-blue-500/30 rounded-lg p-5 text-gray-100 placeholder-electric-blue-500/60 focus:border-electric-blue-500 focus:ring-0 outline-none font-mono text-lg h-40 resize-none transition-all duration-300 hover:border-electric-blue-500/60"
-                                        disabled={isEnhancing}
-                                    />
-                                    <div className="flex flex-col gap-2">
-                                        {userInput && (
-                                            <>
-                                                <button
-                                                    onClick={enhancePrompt}
-                                                    disabled={isEnhancing}
-                                                    className={`flex items-center justify-center bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl px-4 py-4 transition-all duration-200 ${isEnhancing ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                                >
-                                                    {isEnhancing ? (
-                                                        <Loader2 className="h-8 w-8 animate-spin" />
-                                                    ) : (
-                                                        <Wand2 className="h-8 w-8" />
-                                                    )}
-                                                </button>
-                                                <button
-                                                    onClick={() => onGenerate(userInput)}
-                                                    disabled={isEnhancing}
-                                                    className={`flex items-center justify-center bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-xl px-4 py-4 transition-all duration-200 ${isEnhancing ? 'opacity-70 cursor-not-allowed' : ''}`}
-                                                >
-                                                    <Send className="h-8 w-8" />
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex justify-end mt-4">
-                                    <Link className="h-6 w-6 text-electric-blue-400/80 hover:text-electric-blue-400 transition-colors duration-200" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Holographic Suggestions Grid */}
-                    <div className="w-full max-w-5xl">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {Lookup?.SUGGSTIONS.map((suggestion, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => onSuggestionClick(suggestion)}
-                                    className="group relative p-6 bg-gray-900/50 hover:bg-gray-800/60 border-2 border-electric-blue-500/20 rounded-xl text-left transition-all duration-300 hover:border-electric-blue-500/40 hover:shadow-[0_0_20px_2px_rgba(59,130,246,0.2)]"
-                                >
-                                    <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_50%,#3b82f620)] opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-lg" />
-                                    <span className="text-electric-blue-400/80 group-hover:text-electric-blue-400 font-mono text-sm tracking-wide transition-colors duration-300">
-                                        {suggestion}
-                                    </span>
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <main className="min-h-screen bg-[#f5f6f3] text-[#17231e] swiss-grid">
+            <header className="mx-auto flex max-w-7xl items-center justify-between border-b border-[#17231e]/10 px-6 py-5">
+                <Link href="/" className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#163b2d] font-black text-[#d8f36a]">S</span><span><b>Swiss Dev</b><small className="ml-2 text-[10px] uppercase tracking-[.2em] text-[#68776f]">Desktop IDE</small></span></Link>
+                <div className="flex items-center gap-3">{session ? <span className="text-sm font-semibold text-[#496457]">Signed in</span> : <button onClick={() => supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/auth/callback` } })} className="px-4 py-2 text-sm font-semibold text-[#496457]">Sign in</button>}<Link href="/register" className="rounded-lg bg-[#163b2d] px-4 py-2 text-sm font-semibold text-white">Create account</Link></div>
+            </header>
+            <section className="mx-auto grid max-w-7xl gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
+                <div><p className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[.2em] text-[#61776a]"><Sparkles className="h-4 w-4 text-[#9bbd46]" /> The agentic desktop IDE</p><h1 className="max-w-3xl text-6xl font-semibold leading-[.95] tracking-[-.07em] text-[#163b2d] md:text-8xl">A better place to build.</h1><p className="mt-7 max-w-xl text-lg leading-8 text-[#68776f]">Swiss Dev brings your agents, codebase, preview, and product decisions into one focused desktop workspace.</p><div className="mt-9 flex flex-wrap gap-3"><a href="#download" className="inline-flex items-center gap-2 rounded-lg bg-[#163b2d] px-5 py-3 font-semibold text-white shadow-lg shadow-[#163b2d]/15"><Download className="h-4 w-4" /> Download Swiss Dev</a><a href="#plans" className="inline-flex items-center gap-2 rounded-lg border border-[#163b2d]/20 bg-white/60 px-5 py-3 font-semibold text-[#163b2d]">View plans <ArrowRight className="h-4 w-4" /></a></div></div>
+                <div className="rounded-2xl border border-[#163b2d]/15 bg-[#1b211f] p-3 shadow-2xl shadow-[#163b2d]/20"><div className="rounded-xl border border-white/10 bg-[#252d29] p-5"><div className="mb-5 flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-[#b9e55b]" /><span className="text-xs text-gray-400">swiss-dev / workspace</span></div><div className="grid grid-cols-[42px_130px_1fr] gap-2 text-[11px]"><div className="space-y-2 text-gray-500"><Zap className="h-4 w-4 text-[#b9e55b]" /><span className="block">⌘</span><span className="block">◉</span></div><div className="space-y-2 border-r border-white/10 pr-3 text-gray-400"><p className="text-gray-200">EXPLORER</p><p>▾ src</p><p className="pl-3 text-[#b9e55b]">App.jsx</p><p className="pl-3">index.css</p><p>▾ components</p></div><div className="rounded-lg bg-[#151a18] p-4 font-mono leading-6 text-gray-400"><p><i className="text-[#cf8cf4]">export default</i> <span className="text-[#b9e55b]">function</span> Workspace() &#123;</p><p className="pl-4 text-gray-500">// your agent is ready</p><p className="pl-4">return <span className="text-[#85c7e8]">&lt;Product /&gt;</span>;</p><p>&#125;</p></div></div><div className="mt-5 flex items-center justify-between rounded-lg border border-[#b9e55b]/20 bg-[#b9e55b]/5 px-3 py-2 text-xs text-[#dceeb5]"><span>Agent is reviewing your changes</span><span className="h-2 w-2 animate-pulse rounded-full bg-[#b9e55b]" /></div></div></div>
+            </section>
+            <section id="download" className="border-y border-[#17231e]/10 bg-white/45"><div className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-[.2em] text-[#68776f]">One focused workspace</p><h2 className="mt-3 text-4xl font-semibold tracking-[-.04em] text-[#163b2d]">Made for your desktop.</h2><p className="mt-4 max-w-md leading-7 text-[#68776f]">Install once, sign in, and keep your projects local to the way you work. Windows 10+ and macOS are supported.</p></div><div className="grid gap-3 sm:grid-cols-2"><a href="/api/download/windows" className="group rounded-xl border border-[#163b2d]/15 bg-white p-4 shadow-sm"><img src="/download_buttons/windowsbutton.png" alt="Download Swiss Dev for Windows 10 and above" className="h-auto w-full object-contain" /><span className="mt-3 flex items-center justify-between text-xs font-semibold text-[#496457]"><span className="flex items-center gap-2"><MonitorDown className="h-4 w-4" /> Windows 10+</span><Download className="h-4 w-4 text-[#91a097] group-hover:text-[#163b2d]" /></span><small className="mt-1 block text-[11px] text-[#91a097]">Download installer</small></a><a href="/api/download/mac" className="group rounded-xl border border-[#163b2d]/15 bg-white p-4 shadow-sm"><img src="/download_buttons/mac-button.png" alt="Download Swiss Dev for macOS" className="h-auto w-full object-contain" /><span className="mt-3 flex items-center justify-between text-xs font-semibold text-[#496457]"><span className="flex items-center gap-2"><Laptop className="h-4 w-4" /> macOS</span><Download className="h-4 w-4 text-[#91a097] group-hover:text-[#163b2d]" /></span><small className="mt-1 block text-[11px] text-[#91a097]">Download installer</small></a></div></div></section>
+            <section id="plans" className="mx-auto max-w-7xl px-6 py-20"><div className="mb-10"><p className="text-xs font-bold uppercase tracking-[.2em] text-[#68776f]">Simple capacity plans</p><h2 className="mt-3 text-4xl font-semibold tracking-[-.04em] text-[#163b2d]">Choose your runway.</h2></div><div className="grid gap-4 lg:grid-cols-3">{plans.map((plan) => <article key={plan.name} className={`rounded-xl border p-6 ${plan.featured ? "border-[#163b2d] bg-[#163b2d] text-white shadow-xl" : "border-[#163b2d]/15 bg-white/70"}`}><p className={`text-sm font-bold ${plan.featured ? "text-[#d8f36a]" : "text-[#496457]"}`}>{plan.name}</p><p className="mt-5 text-4xl font-semibold tracking-[-.05em]">{plan.price}<small className={`ml-1 text-sm font-normal ${plan.featured ? "text-white/60" : "text-[#91a097]"}`}>/ month</small></p><p className={`mt-2 text-sm ${plan.featured ? "text-white/65" : "text-[#68776f]"}`}>{plan.detail}</p><ul className="my-7 space-y-3">{plan.items.map((item) => <li key={item} className={`flex gap-2 text-sm ${plan.featured ? "text-white/80" : "text-[#496457]"}`}><Check className={`h-4 w-4 shrink-0 ${plan.featured ? "text-[#d8f36a]" : "text-[#67a977]"}`} />{item}</li>)}</ul><Link href={plan.name === "Free" ? "/register" : `/register?plan=${plan.name.toLowerCase()}`} className={`block rounded-lg px-4 py-3 text-center text-sm font-semibold ${plan.featured ? "bg-[#d8f36a] text-[#163b2d]" : "bg-[#163b2d] text-white"}`}>{plan.cta}</Link></article>)}</div><p className="mt-5 text-center text-xs text-[#91a097]">Annual billing: Builder $75/year · Pro $199/year</p></section>
+            <footer className="border-t border-[#17231e]/10 px-6 py-8 text-center text-xs text-[#68776f]">Swiss Dev · Desktop-first development for people with something to make.</footer>
+        </main>
     );
 }
-
-export default Hero;

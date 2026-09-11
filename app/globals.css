@@ -3,7 +3,8 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), "Helvetica Neue", sans-serif;
+  background: #f5f6f3;
 }
 
 @layer base {
@@ -69,4 +70,32 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Antigravity Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(59, 130, 246, 0.6);
+}
+
+.swiss-grid {
+  background-image: linear-gradient(rgba(28, 45, 38, 0.055) 1px, transparent 1px), linear-gradient(90deg, rgba(28, 45, 38, 0.055) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.swiss-noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E");
 }

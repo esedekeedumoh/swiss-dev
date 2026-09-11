@@ -1,9 +1,9 @@
-import { GenAiCode } from '@/configs/AiModel';
+import { createCodeModelSession } from '@/configs/AiModel';
 
 export async function POST(req) {
-    const {prompt} = await req.json();
+    const { prompt, model } = await req.json();
     try {
-        const result = await GenAiCode.sendMessageStream(prompt);
+        const result = await createCodeModelSession(model).sendMessageStream(prompt);
         
         const encoder = new TextEncoder();
         const stream = new ReadableStream({

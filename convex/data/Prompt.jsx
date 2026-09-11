@@ -91,7 +91,7 @@ Ensure the project follows best practices in component organization and styling.
     - Add external images if needed.
     - The lucide-react library is also available to be imported IF NECESSARY.
     - Update the package.json file with the required dependencies.
-    - Do not use backend or database related.
+    - When the brief requires product behavior, include the required API, auth, database, and validation layers using the available project conventions. Keep secrets in environment variables.
     `,
     
     ENHANCE_PROMPT_RULES: dedent`
@@ -106,7 +106,7 @@ Ensure the project follows best practices in component organization and styling.
    - Card grid with hover animations  
    - Contact form with validation  
    - Smooth page transitions  
-    6. Dont use the backend or database related.
+    6. When backend behavior is requested, describe the API contract and data shape clearly so it can be implemented safely.
     7. Keep it less than 300 words
     
 

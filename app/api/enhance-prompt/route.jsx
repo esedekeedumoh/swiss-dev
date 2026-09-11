@@ -1,5 +1,5 @@
 import { chatSession } from "@/configs/AiModel";
-import Prompt from "@/data/Prompt";
+import Prompt from "@/convex/data/Prompt";
 
 export async function POST(request) {
     try {

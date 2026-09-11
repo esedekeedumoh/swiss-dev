@@ -1,10 +1,10 @@
-import { chatSession } from "@/configs/AiModel";
+import { createChatModelSession } from "@/configs/AiModel";
 
 export async function POST(req) {
-    const {prompt} = await req.json();
+    const { prompt, model } = await req.json();
 
     try {
-        const result = await chatSession.sendMessageStream(prompt);
+        const result = await createChatModelSession(model).sendMessageStream(prompt);
         
         const encoder = new TextEncoder();
         const stream = new ReadableStream({

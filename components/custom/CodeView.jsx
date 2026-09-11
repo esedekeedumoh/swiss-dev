@@ -1,30 +1,47 @@
-"use client"
-import React, { useContext, useState, useEffect, useCallback, memo } from 'react';
+import React, { useContext, useState, useEffect, useCallback, memo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import Lookup from '@/data/Lookup';
+import Lookup from '@/convex/data/Lookup';
 import { MessagesContext } from '@/context/MessagesContext';
 import axios from 'axios';
-import Prompt from '@/data/Prompt';
+import Prompt from '@/convex/data/Prompt';
 import { useConvex, useMutation } from 'convex/react';
 import { useParams } from 'next/navigation';
 import { api } from '@/convex/_generated/api';
-import { Loader2Icon, Download } from 'lucide-react';
+import { Loader2Icon, Download, Eye, ExternalLink, MessageSquarePlus, TerminalSquare } from 'lucide-react';
 import JSZip from 'jszip';
+import { ModelContext } from '@/context/ModelContext';
 
 const SandpackProvider = dynamic(() => import("@codesandbox/sandpack-react").then(mod => mod.SandpackProvider), { ssr: false });
 const SandpackLayout = dynamic(() => import("@codesandbox/sandpack-react").then(mod => mod.SandpackLayout), { ssr: false });
 const SandpackCodeEditor = dynamic(() => import("@codesandbox/sandpack-react").then(mod => mod.SandpackCodeEditor), { ssr: false });
 const SandpackPreview = dynamic(() => import("@codesandbox/sandpack-react").then(mod => mod.SandpackPreview), { ssr: false });
 const SandpackFileExplorer = dynamic(() => import("@codesandbox/sandpack-react").then(mod => mod.SandpackFileExplorer), { ssr: false });
+const SandpackConsole = dynamic(() => import("@codesandbox/sandpack-react").then(mod => mod.SandpackConsole), { ssr: false });
 
 function CodeView() {
     const { id } = useParams();
     const [activeTab, setActiveTab] = useState('code');
+    const [isReviewMode, setIsReviewMode] = useState(false);
+    const [isConsoleOpen, setIsConsoleOpen] = useState(false);
     const [files, setFiles] = useState(Lookup?.DEFAULT_FILE);
     const { messages } = useContext(MessagesContext);
+    const { selectedModel } = useContext(ModelContext);
     const UpdateFiles = useMutation(api.workspace.UpdateFiles);
+    const saveVisualComment = useMutation(api.workspace.SaveVisualComment);
     const convex = useConvex();
     const [loading, setLoading] = useState(false);
+    const [visualComments, setVisualComments] = useState([]);
+    const overlayRef = useRef(null);
+    const [activeCommentBox, setActiveCommentBox] = useState(null);
+
+    const openInChrome = useCallback(() => {
+        const iframe = document.querySelector('iframe.sp-preview-iframe');
+        if (iframe && iframe.src) {
+            window.open(iframe.src, '_blank');
+        } else {
+            alert("Preview is not fully loaded yet or iframe could not be found.");
+        }
+    }, []);
 
     const preprocessFiles = useCallback((files) => {
         const processed = {};
@@ -65,7 +82,7 @@ function CodeView() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ prompt: PROMPT }),
+                body: JSON.stringify({ prompt: PROMPT, model: selectedModel }),
             });
 
             const reader = response.body.getReader();
@@ -121,12 +138,8 @@ function CodeView() {
     
     const downloadFiles = useCallback(async () => {
         try {
-            // Create a new JSZip instance
             const zip = new JSZip();
-            
-            // Add each file to the zip
             Object.entries(files).forEach(([filename, content]) => {
-                // Handle the file content based on its structure
                 let fileContent;
                 if (typeof content === 'string') {
                     fileContent = content;
@@ -134,20 +147,16 @@ function CodeView() {
                     if (content.code) {
                         fileContent = content.code;
                     } else {
-                        // If it's an object without code property, stringify it
                         fileContent = JSON.stringify(content, null, 2);
                     }
                 }
 
-                // Only add the file if we have content
                 if (fileContent) {
-                    // Remove leading slash if present
                     const cleanFileName = filename.startsWith('/') ? filename.slice(1) : filename;
                     zip.file(cleanFileName, fileContent);
                 }
             });
 
-            // Add package.json with dependencies
             const packageJson = {
                 name: "generated-project",
                 version: "1.0.0",
@@ -161,10 +170,7 @@ function CodeView() {
             };
             zip.file("package.json", JSON.stringify(packageJson, null, 2));
 
-            // Generate the zip file
             const blob = await zip.generateAsync({ type: "blob" });
-            
-            // Create download link and trigger download
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -178,78 +184,226 @@ function CodeView() {
         }
     }, [files]);
 
-    return (
-        <div className='relative'>
-            <div className='bg-[#181818] w-full p-2 border'>
-                <div className='flex items-center justify-between'>
-                    <div className='flex items-center flex-wrap shrink-0 bg-black p-1 justify-center
-                    w-[140px] gap-3 rounded-full'>
-                        <h2 onClick={() => setActiveTab('code')}
-                            className={`text-sm cursor-pointer 
-                        ${activeTab == 'code' && 'text-blue-500 bg-blue-500 bg-opacity-25 p-1 px-2 rounded-full'}`}>
-                            Code</h2>
+    const handleOverlayClick = (e) => {
+        if (!overlayRef.current) return;
+        const rect = overlayRef.current.getBoundingClientRect();
+        const xPercent = ((e.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((e.clientY - rect.top) / rect.height) * 100;
+        setActiveCommentBox({ xPercent, yPercent, text: '' });
+    };
 
-                        <h2 onClick={() => setActiveTab('preview')}
-                            className={`text-sm cursor-pointer 
-                        ${activeTab == 'preview' && 'text-blue-500 bg-blue-500 bg-opacity-25 p-1 px-2 rounded-full'}`}>
-                            Preview</h2>
-                    </div>
-                    
-                    {/* Download Button */}
+    const submitVisualComment = async () => {
+        if (!activeCommentBox?.text.trim()) return;
+        
+        await saveVisualComment({
+            workspaceId: id,
+            selectorPath: "visual-pin",
+            xPercent: activeCommentBox.xPercent,
+            yPercent: activeCommentBox.yPercent,
+            comment: activeCommentBox.text,
+            author: "User"
+        });
+        
+        setVisualComments([...visualComments, { 
+            id: Date.now(), 
+            ...activeCommentBox 
+        }]);
+        setActiveCommentBox(null);
+    };
+
+    return (
+        <div className="relative flex flex-col h-full bg-[#1A1C24] overflow-hidden">
+            <div className="bg-googleAnti-ink/80 backdrop-blur-md px-4 py-3 border-b border-googleAnti-blue/10 flex items-center justify-between shrink-0 shadow-md">
+                <div className="flex items-center space-x-2 bg-googleAnti-cloud/40 p-1 rounded-xl border border-googleAnti-blue/10">
+                    <button 
+                        onClick={() => setActiveTab('code')}
+                        className={`text-sm tracking-wide font-medium px-4 py-1.5 rounded-lg transition-all ${
+                            activeTab === 'code' 
+                                ? 'text-white bg-googleAnti-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]' 
+                                : 'text-gray-400 hover:text-white'
+                        }`}>
+                        Code
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('preview')}
+                        className={`text-sm tracking-wide font-medium px-4 py-1.5 rounded-lg transition-all ${
+                            activeTab === 'preview' 
+                                ? 'text-white bg-googleAnti-blue shadow-[0_0_10px_rgba(59,130,246,0.5)]' 
+                                : 'text-gray-400 hover:text-white'
+                        }`}>
+                        Preview
+                    </button>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                    <button
+                        onClick={() => setIsConsoleOpen(!isConsoleOpen)}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                            isConsoleOpen 
+                                ? 'bg-googleAnti-blue/20 text-white border border-googleAnti-blue/30' 
+                                : 'bg-transparent text-gray-400 hover:text-white hover:bg-googleAnti-cloud/40'
+                        }`}
+                        title="Toggle Terminal"
+                    >
+                        <TerminalSquare className="h-4 w-4" />
+                        <span className="hidden sm:inline">Terminal</span>
+                    </button>
+
+                    {activeTab === 'preview' && (
+                        <>
+                            <button
+                                onClick={openInChrome}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all bg-googleAnti-cloud/40 text-gray-300 border border-googleAnti-blue/10 hover:bg-googleAnti-cloud"
+                            >
+                                <ExternalLink className="h-4 w-4" />
+                                <span className="hidden sm:inline">Pop Out</span>
+                            </button>
+                            <button
+                                onClick={() => setIsReviewMode(!isReviewMode)}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                                    isReviewMode 
+                                        ? 'bg-googleAnti-green/20 text-googleAnti-green border border-googleAnti-green/30' 
+                                        : 'bg-googleAnti-cloud/40 text-gray-300 border border-googleAnti-blue/10 hover:bg-googleAnti-cloud'
+                                }`}
+                            >
+                                <Eye className="h-4 w-4" />
+                                <span className="hidden sm:inline">{isReviewMode ? 'Exit' : 'Review'}</span>
+                            </button>
+                        </>
+                    )}
                     <button
                         onClick={downloadFiles}
-                        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full transition-colors duration-200"
+                        className="flex items-center gap-2 bg-googleAnti-blue hover:bg-blue-500 text-white px-4 py-2 rounded-xl transition-all shadow-[0_0_15px_rgba(59,130,246,0.2)]"
                     >
                         <Download className="h-4 w-4" />
-                        <span>Download Files</span>
                     </button>
                 </div>
             </div>
-            <SandpackProvider 
-            files={files}
-            template="react" 
-            theme={'dark'}
-            customSetup={{
-                dependencies: {
-                    ...Lookup.DEPENDANCY
-                },
-                entry: '/index.js'
-            }}
-            options={{
-                externalResources: ['https://cdn.tailwindcss.com'],
-                bundlerTimeoutSecs: 120,
-                recompileMode: "immediate",
-                recompileDelay: 300
-            }}
-            >
-                <div className="relative">
-                    <SandpackLayout>
-                        {activeTab=='code'?<>
-                            <SandpackFileExplorer style={{ height: '80vh' }} />
-                            <SandpackCodeEditor 
-                            style={{ height: '80vh' }}
-                            showTabs
-                            showLineNumbers
-                            showInlineErrors
-                            wrapContent />
-                        </>:
-                        <>
-                            <SandpackPreview 
-                                style={{ height: '80vh' }} 
-                                showNavigator={true}
-                                showOpenInCodeSandbox={false}
-                                showRefreshButton={true}
-                            />
-                        </>}
-                    </SandpackLayout>
-                </div>
-            </SandpackProvider>
 
-            {loading&&<div className='p-10 bg-gray-900 opacity-80 absolute top-0 
-            rounded-lg w-full h-full flex items-center justify-center'>
-                <Loader2Icon className='animate-spin h-10 w-10 text-white'/>
-                <h2 className='text-white'> Generating files...</h2>
-            </div>}
+            <div className="flex-1 relative overflow-hidden flex flex-col">
+                <SandpackProvider 
+                files={files}
+                template="react" 
+                theme={'dark'}
+                customSetup={{
+                    dependencies: {
+                        ...Lookup.DEPENDANCY
+                    },
+                    entry: '/index.js'
+                }}
+                options={{
+                    externalResources: ['https://cdn.tailwindcss.com'],
+                    bundlerTimeoutSecs: 120,
+                    recompileMode: "immediate",
+                    recompileDelay: 300
+                }}
+                >
+                    <SandpackLayout className="!h-full !flex-col !rounded-none !border-none !bg-transparent">
+                        <div className="flex-1 flex w-full relative overflow-hidden">
+                            {activeTab === 'code' ? (
+                                <>
+                                    <SandpackFileExplorer className="!h-full !border-r !border-googleAnti-blue/10" />
+                                    <SandpackCodeEditor 
+                                    className="!h-full"
+                                    showTabs
+                                    showLineNumbers
+                                    showInlineErrors
+                                    wrapContent />
+                                </>
+                            ) : (
+                                <div className="relative w-full h-full">
+                                    <SandpackPreview 
+                                        className="!h-full w-full"
+                                        showNavigator={true}
+                                        showOpenInCodeSandbox={false}
+                                        showRefreshButton={true}
+                                    />
+                                    <div className="pointer-events-none absolute bottom-3 right-3 z-10 rounded-md border border-gray-200/20 bg-gray-950/80 px-2.5 py-1.5 text-[10px] font-semibold tracking-wide text-gray-300 shadow-lg">
+                                        Made on Swiss
+                                    </div>
+                                    {isReviewMode && (
+                                        <div 
+                                            ref={overlayRef}
+                                            onClick={handleOverlayClick}
+                                            className="absolute inset-0 z-20 cursor-crosshair bg-googleAnti-blue/5"
+                                            title="Click anywhere to leave a comment"
+                                        >
+                                            {visualComments.map((vc, i) => (
+                                                <div 
+                                                    key={vc.id || i}
+                                                    className="absolute w-6 h-6 -ml-3 -mt-3 bg-googleAnti-green rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.8)] border border-white text-xs font-bold text-white z-30"
+                                                    style={{ left: `${vc.xPercent}%`, top: `${vc.yPercent}%` }}
+                                                >
+                                                    {i + 1}
+                                                </div>
+                                            ))}
+                                            {activeCommentBox && (
+                                                <div 
+                                                    className="absolute bg-gray-900 border border-gray-700 p-3 rounded-lg shadow-2xl w-64 z-40 cursor-default"
+                                                    style={{ left: `${activeCommentBox.xPercent}%`, top: `${activeCommentBox.yPercent}%` }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <div className="w-4 h-4 bg-gray-900 border-l border-t border-gray-700 absolute -top-2 left-4 transform rotate-45" />
+                                                    <div className="relative">
+                                                        <textarea 
+                                                            autoFocus
+                                                            className="w-full bg-gray-800 text-sm text-white rounded p-2 focus:outline-none focus:ring-1 focus:ring-googleAnti-blue resize-none h-20"
+                                                            placeholder="Leave a visual comment..."
+                                                            value={activeCommentBox.text}
+                                                            onChange={(e) => setActiveCommentBox({ ...activeCommentBox, text: e.target.value })}
+                                                        />
+                                                        <div className="flex justify-end space-x-2 mt-2">
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); setActiveCommentBox(null); }} 
+                                                                className="text-xs text-gray-400 hover:text-white px-2"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button 
+                                                                onClick={submitVisualComment} 
+                                                                className="text-xs bg-googleAnti-blue px-3 py-1.5 rounded text-white font-medium shadow-[0_0_10px_rgba(59,130,246,0.4)]"
+                                                            >
+                                                                Save
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Antigravity Terminal Panel */}
+                        {isConsoleOpen && (
+                            <div className="w-full h-48 border-t border-googleAnti-blue/20 bg-[#151515] shrink-0 relative flex flex-col">
+                                <div className="bg-[#1e1e1e] border-b border-gray-800 px-3 py-1.5 flex items-center justify-between">
+                                    <span className="text-xs font-mono text-gray-400 uppercase tracking-widest">Terminal</span>
+                                    <button onClick={() => setIsConsoleOpen(false)} className="text-gray-500 hover:text-white text-xs px-2 cursor-pointer">&times;</button>
+                                </div>
+                                <div className="flex-1 overflow-hidden relative root-console">
+                                    <SandpackConsole 
+                                        resetOnPreviewRestart={true}
+                                        standalone={true}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        <style dangerouslySetInnerHTML={{__html: `
+                            .root-console .sp-console { height: 100% !important; max-height: none !important; background: transparent !important; }
+                            .root-console .sp-console-list { border-radius: 0 !important; }
+                        `}} />
+                    </SandpackLayout>
+                </SandpackProvider>
+            </div>
+
+            {loading && (
+                <div className='absolute inset-0 z-50 bg-googleAnti-ink/80 backdrop-blur-sm flex flex-col items-center justify-center'>
+                    <Loader2Icon className='animate-spin h-10 w-10 text-googleAnti-blue mb-4'/>
+                    <h2 className='text-white font-medium tracking-wide'>Generating Code Overrides...</h2>
+                </div>
+            )}
         </div>
     );
 }
