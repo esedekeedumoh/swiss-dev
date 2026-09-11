@@ -18,7 +18,7 @@ export async function GET(request, { params }) {
         return NextResponse.json({ error: "Unknown installer" }, { status: 404 });
     }
 
-    const releaseUrl = `https://github.com/Ratna-Babu/ai-website-builder/releases/latest/download/${installer.filename}`;
+    const releaseUrl = `https://github.com/esedekeedumoh/swiss-dev/releases/latest/download/${installer.filename}`;
     const response = await fetch(releaseUrl, { redirect: "follow" });
 
     if (!response.ok || !response.body) {
