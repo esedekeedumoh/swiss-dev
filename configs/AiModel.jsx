@@ -216,8 +216,34 @@ export const createChatModelSession = (selectedModel) =>
 export const createCodeModelSession = (selectedModel) =>
     createModelSession(CodeGenerationConfig, codeSeedHistory, selectedModel);
 
-export const chatSession = createChatModelSession();
+const unavailableSession = (message) => ({
+    sendMessage: async () => {
+        throw new Error(message);
+    },
+    sendMessageStream: async () => {
+        throw new Error(message);
+    },
+});
 
-export const GenAiCode = createCodeModelSession();
+const createBuildSafeSession = (factory, missingMessage) => {
+    try {
+        return factory();
+    } catch (error) {
+        return unavailableSession(error?.message || missingMessage);
+    }
+};
 
-export const enhancePromptSession = createModelSession(EnhancePromptConfig, []);
+export const chatSession = createBuildSafeSession(
+    createChatModelSession,
+    "AI chat is not configured.",
+);
+
+export const GenAiCode = createBuildSafeSession(
+    createCodeModelSession,
+    "Code generation is not configured.",
+);
+
+export const enhancePromptSession = createBuildSafeSession(
+    () => createModelSession(EnhancePromptConfig, []),
+    "Prompt enhancement is not configured.",
+);
