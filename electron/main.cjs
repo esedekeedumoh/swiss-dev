@@ -6,7 +6,13 @@ const port = 3210;
 let nextServer;
 
 function startNextServer() {
-  const serverPath = path.join(process.resourcesPath, ".next", "standalone", "server.js");
+  const serverPath = path.join(
+    process.resourcesPath,
+    "app",
+    ".next",
+    "standalone",
+    "server.js",
+  );
   nextServer = spawn(process.execPath, [serverPath], {
     env: {
       ...process.env,
