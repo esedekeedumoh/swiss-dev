@@ -1,6 +1,6 @@
 {
   "name": "swiss-dev",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Swiss Dev desktop AI development workspace",
   "private": true,
   "scripts": {
