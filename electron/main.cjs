@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require("electron");
+const { autoUpdater } = require("electron-updater");
 const { spawn } = require("child_process");
 const path = require("path");
 const http = require("http");
@@ -72,6 +73,12 @@ function createWindow(url) {
 
 app.whenReady().then(() => {
   app.setAppUserModelId("com.swissdev.desktop");
+  if (app.isPackaged) {
+    autoUpdater.autoDownload = true;
+    autoUpdater.checkForUpdatesAndNotify().catch((error) => {
+      console.error("Swiss update check failed:", error);
+    });
+  }
   if (app.isPackaged) {
     startNextServer();
     waitForServer(`http://127.0.0.1:${port}`)

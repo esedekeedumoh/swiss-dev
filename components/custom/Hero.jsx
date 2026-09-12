@@ -17,7 +17,7 @@ export default function Hero() {
     return (
         <main className="min-h-screen bg-[#f5f6f3] text-[#17231e] swiss-grid">
             <header className="mx-auto flex max-w-7xl items-center justify-between border-b border-[#17231e]/10 px-6 py-5">
-                <Link href="/" className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#163b2d] font-black text-[#d8f36a]">S</span><span><b>Swiss Dev</b><small className="ml-2 text-[10px] uppercase tracking-[.2em] text-[#68776f]">Desktop IDE</small></span></Link>
+                <Link href="/" className="flex items-center gap-3"><span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#163b2d] p-1"><img src="/logo.svg.png.png" alt="Swiss Dev logo" className="h-full w-full object-contain" /></span><span><b>Swiss Dev</b><small className="ml-2 text-[10px] uppercase tracking-[.2em] text-[#68776f]">Desktop IDE</small></span></Link>
                 <div className="flex items-center gap-3">{session ? <span className="text-sm font-semibold text-[#496457]">Signed in</span> : <button onClick={() => supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/auth/callback` } })} className="px-4 py-2 text-sm font-semibold text-[#496457]">Sign in</button>}<Link href="/register" className="rounded-lg bg-[#163b2d] px-4 py-2 text-sm font-semibold text-white">Create account</Link></div>
             </header>
             <section className="mx-auto grid max-w-7xl gap-14 px-6 pb-24 pt-20 lg:grid-cols-[1.05fr_.95fr] lg:items-center">
