@@ -9,7 +9,6 @@ let nextServer;
 function startNextServer() {
   const serverPath = path.join(
     process.resourcesPath,
-    "app",
     ".next",
     "standalone",
     "server.js",
@@ -24,6 +23,7 @@ function startNextServer() {
     windowsHide: true,
   });
   nextServer.on("error", (error) => console.error("Swiss server failed:", error));
+  nextServer.stderr?.on("data", (data) => console.error(String(data)));
 }
 
 function waitForServer(url, attempts = 60) {
