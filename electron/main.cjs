@@ -8,12 +8,13 @@ let nextServer;
 
 function startNextServer() {
   const serverPath = path.join(
-    process.resourcesPath,
+    app.getAppPath(),
     ".next",
     "standalone",
     "server.js",
   );
   nextServer = spawn(process.execPath, [serverPath], {
+    cwd: path.dirname(serverPath),
     env: {
       ...process.env,
       ELECTRON_RUN_AS_NODE: "1",
@@ -23,6 +24,7 @@ function startNextServer() {
     windowsHide: true,
   });
   nextServer.on("error", (error) => console.error("Swiss server failed:", error));
+  nextServer.stdout?.on("data", (data) => console.log(String(data)));
   nextServer.stderr?.on("data", (data) => console.error(String(data)));
 }
 
