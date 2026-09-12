@@ -10,7 +10,7 @@ import FirstRunSetup, { SETUP_STORAGE_KEY } from "@/components/custom/FirstRunSe
 const DesktopOnlyGate = () => (
     <div className="hidden max-lg:flex fixed inset-0 z-[100] items-center justify-center bg-[#111318] p-6 text-center text-white">
         <div className="max-w-sm">
-            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#b9e55b] font-black text-[#17231e]">S</div>
+            <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-[#b9e55b] p-2"><img src="/logo.svg.png.png" alt="Swiss Dev logo" className="h-full w-full object-contain" /></div>
             <h1 className="text-2xl font-semibold">Swiss Dev is a desktop app</h1>
             <p className="mt-3 text-sm leading-6 text-gray-400">Download the Windows or macOS app to open your development workspace.</p>
         </div>
