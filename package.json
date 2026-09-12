@@ -1,6 +1,7 @@
 {
-  "name": "project_doomsday",
-  "version": "0.1.0",
+  "name": "swiss-dev",
+  "version": "0.1.8",
+  "description": "Swiss Dev desktop AI development workspace",
   "private": true,
   "scripts": {
     "dev": "next dev",

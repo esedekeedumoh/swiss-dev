@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import React, { useEffect, useState } from "react";
+import { Code } from "lucide-react";
 import InstallSwissButton from "@/components/custom/InstallSwissButton";
 import Header from "@/components/custom/Header";
 import FirstRunSetup, { SETUP_STORAGE_KEY } from "@/components/custom/FirstRunSetup";
@@ -39,6 +40,7 @@ const BackgroundPattern = React.memo(() => (
 BackgroundPattern.displayName = "BackgroundPattern";
 
 import Sidebar from "@/components/custom/Sidebar";
+import { ActivityBar, BottomPanel } from "@/components/custom/WorkspaceChrome";
 
 const Workspace = () => {
     const [setupComplete, setSetupComplete] = useState(null);
@@ -55,6 +57,7 @@ const Workspace = () => {
 
     const [agentWidth, setAgentWidth] = useState(380);
     const [isDragging, setIsDragging] = useState(false);
+    const [activeActivity, setActiveActivity] = useState("Explorer");
 
     if (setupComplete === null) {
         return <div className="min-h-screen bg-[#0b0d12]" />;
@@ -96,7 +99,8 @@ const Workspace = () => {
             <BackgroundPattern />
             
             {/* Global Left Sidebar (Antigravity Style) */}
-            <div className="relative z-20 h-full flex-shrink-0">
+            <ActivityBar active={activeActivity} onChange={setActiveActivity} />
+            <div className="relative z-20 h-full w-60 flex-shrink-0">
                 <Sidebar />
             </div>
 
@@ -113,11 +117,14 @@ const Workspace = () => {
                 {/* VS Code layout: project explorer, editor, then agent panel. */}
                 <div className="flex flex-1 overflow-hidden relative">
                     {/* Center: code editor and live preview */}
-                    <div 
-                        className="min-w-0 flex-1 bg-[#0a0a0f] relative overflow-hidden flex flex-col pointer-events-auto transition-none"
-                    >
+                    <div className="min-w-0 flex-1 bg-[#0a0a0f] relative overflow-hidden flex flex-col pointer-events-auto transition-none">
+                        <div className="flex h-9 shrink-0 items-center border-b border-white/10 bg-[#11141b] text-[11px] text-gray-400">
+                            <div className="flex h-full items-center gap-2 border-r border-white/10 bg-[#0a0a0f] px-4 text-gray-200"><Code className="h-3.5 w-3.5 text-[#b9e55b]" /> App.jsx <span className="text-gray-600">×</span></div>
+                            <div className="ml-auto flex items-center gap-3 px-3 text-gray-600"><span>Split Editor</span><span>Preview</span></div>
+                        </div>
                         {isDragging && <div className="absolute inset-0 z-50" />}
-                        <CodeView />
+                        <div className="min-h-0 flex-1 overflow-hidden"><CodeView /></div>
+                        <BottomPanel />
                     </div>
 
                     {/* Resizer Handle */}

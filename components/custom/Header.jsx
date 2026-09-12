@@ -1,5 +1,5 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
-import { Code, Sparkles, Plus, ChevronDown, LogOut, Settings, User } from 'lucide-react';
+import { Code, Sparkles, Plus, ChevronDown, LogOut, Settings, User, LockKeyhole } from 'lucide-react';
 import SettingsDialog from './SettingsDialog';
 import { AI_MODELS, ModelContext } from '@/context/ModelContext';
 import { SessionContext } from '@/app/provider';
@@ -83,10 +83,13 @@ function Header() {
                                         {AI_MODELS.map((model) => (
                                             <button 
                                                 key={model.id}
-                                                onClick={() => { setSelectedModel(model.id); setModelOpen(false); }}
-                                                className={`w-full text-left px-4 py-2 text-sm transition-colors ${selectedModel === model.id ? 'bg-googleAnti-blue/10 text-googleAnti-blue font-medium' : 'text-gray-300 hover:bg-googleAnti-cloud'}`}
+                                                disabled={!model.free}
+                                                onClick={() => { if (model.free) { setSelectedModel(model.id); setModelOpen(false); } }}
+                                                title={model.free ? 'Available on Free' : 'Upgrade your plan to unlock this model'}
+                                                className={`flex w-full items-center justify-between px-4 py-2 text-left text-sm transition-colors ${selectedModel === model.id ? 'bg-googleAnti-blue/10 text-googleAnti-blue font-medium' : model.free ? 'text-gray-300 hover:bg-googleAnti-cloud' : 'cursor-not-allowed text-gray-600'}`}
                                             >
-                                                {model.label}
+                                                <span>{model.label}</span>
+                                                {!model.free && <LockKeyhole className="h-3.5 w-3.5" />}
                                             </button>
                                         ))}
                                     </div>

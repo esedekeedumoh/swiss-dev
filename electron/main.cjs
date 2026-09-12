@@ -1,6 +1,7 @@
 const { app, BrowserWindow } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
+const http = require("http");
 
 const port = 3210;
 let nextServer;
@@ -22,30 +23,63 @@ function startNextServer() {
     },
     windowsHide: true,
   });
+  nextServer.on("error", (error) => console.error("Swiss server failed:", error));
 }
 
-function createWindow() {
+function waitForServer(url, attempts = 60) {
+  return new Promise((resolve, reject) => {
+    const check = () => {
+      const request = http.get(url, (response) => {
+        response.resume();
+        if (response.statusCode && response.statusCode < 500) {
+          resolve();
+          return;
+        }
+        retry();
+      });
+      request.on("error", retry);
+      request.setTimeout(1000, () => {
+        request.destroy();
+        retry();
+      });
+    };
+    const retry = () => {
+      if (--attempts <= 0) reject(new Error(`Swiss server did not start at ${url}`));
+      else setTimeout(check, 250);
+    };
+    check();
+  });
+}
+
+function createWindow(url) {
   const window = new BrowserWindow({
     width: 1440,
     height: 920,
     minWidth: 1100,
     minHeight: 700,
     backgroundColor: "#0b0d12",
+    title: "Swiss Dev",
     webPreferences: {
       contextIsolation: true,
       sandbox: true,
     },
   });
 
-  window.loadURL(`http://127.0.0.1:${port}`);
+  window.loadURL(url);
 }
 
 app.whenReady().then(() => {
+  app.setAppUserModelId("com.swissdev.desktop");
   if (app.isPackaged) {
     startNextServer();
-    setTimeout(createWindow, 800);
+    waitForServer(`http://127.0.0.1:${port}`)
+      .then(() => createWindow(`http://127.0.0.1:${port}`))
+      .catch((error) => {
+        console.error(error);
+        createWindow(`data:text/html,<h1>Swiss Dev failed to start</h1><p>${encodeURIComponent(error.message)}</p>`);
+      });
   } else {
-    createWindow();
+    createWindow("http://localhost:3000");
   }
 });
 
