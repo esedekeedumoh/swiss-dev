@@ -17,7 +17,7 @@ function getAdminClient() {
 
 function signSession(admin) {
     if (!sessionSecret) throw new Error("ADMIN_SESSION_SECRET is missing");
-    const payload = Buffer.from(JSON.stringify({ id: admin.id, email: admin.email, exp: Date.now() + 86400000 })).toString("base64url");
+    const payload = Buffer.from(JSON.stringify({ id: admin.id, email: admin.email, mustChangePassword: admin.must_change_password, exp: Date.now() + 86400000 })).toString("base64url");
     const signature = createHmac("sha256", sessionSecret).update(payload).digest("base64url");
     return `${payload}.${signature}`;
 }
@@ -54,7 +54,7 @@ export async function POST(request) {
             if (error) throw error;
             const admin = data?.[0];
             if (!admin) return json({ error: "Invalid admin credentials" }, 401);
-            const response = json({ admin: { email: admin.email, displayName: admin.display_name } });
+            const response = json({ admin: { id: admin.id, email: admin.email, displayName: admin.display_name, mustChangePassword: admin.must_change_password } });
             response.headers.append("Set-Cookie", `${cookieName}=${signSession(admin)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
             return response;
         } catch (error) {
@@ -68,6 +68,17 @@ export async function POST(request) {
         if (body.action === "logout") {
             const response = json({ ok: true });
             response.headers.append("Set-Cookie", `${cookieName}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`);
+            return response;
+        }
+        if (body.action === "change-password") {
+            if (!body.password || body.password.length < 10) return json({ error: "Password must be at least 10 characters" }, 400);
+            const session = getSession(request);
+            const { data, error } = await client.rpc("change_admin_password", { admin_id: session.id, new_password: body.password });
+            if (error) throw error;
+            if (!data) return json({ error: "Password was not changed" }, 400);
+            const admin = { id: session.id, email: session.email, must_change_password: false };
+            const response = json({ ok: true, admin: { id: admin.id, email: admin.email, mustChangePassword: false } });
+            response.headers.append("Set-Cookie", `${cookieName}=${signSession(admin)}; HttpOnly; SameSite=Strict; Path=/; Max-Age=86400${process.env.NODE_ENV === "production" ? "; Secure" : ""}`);
             return response;
         }
         if (body.action === "set-plan") {
@@ -118,11 +129,11 @@ export async function GET(request) {
             client.from("profiles").select("id, plan, display_name, created_at"),
             client.from("daily_usage").select("user_id, runtime_seconds, ai_requests, usage_date").gte("usage_date", new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10)),
             client.from("workspaces").select("id", { count: "exact", head: true }),
-            client.from("admin_users").select("id, email, display_name, created_at").order("created_at", { ascending: true }),
+            client.from("admin_users").select("id, email, display_name, must_change_password, created_at").order("created_at", { ascending: true }),
         ]);
         if (plans.error || usage.error || workspaces.error || admins.error || users.error) throw plans.error || usage.error || workspaces.error || admins.error || users.error;
         const planByUser = Object.fromEntries((plans.data || []).map((profile) => [profile.id, profile]));
-        return json({ admin: { email: session.email }, users: (users.data.users || []).map((user) => ({ id: user.id, email: user.email, lastSignIn: user.last_sign_in_at, createdAt: user.created_at, ...planByUser[user.id] })), usage: usage.data || [], workspaceCount: workspaces.count || 0, admins: admins.data || [] });
+        return json({ admin: { id: session.id, email: session.email, mustChangePassword: Boolean(session.mustChangePassword) }, users: (users.data.users || []).map((user) => ({ id: user.id, email: user.email, lastSignIn: user.last_sign_in_at, createdAt: user.created_at, ...planByUser[user.id] })), usage: usage.data || [], workspaceCount: workspaces.count || 0, admins: admins.data || [] });
     } catch (error) {
         return json({ error: error.message }, 500);
     }

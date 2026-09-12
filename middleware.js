@@ -5,10 +5,6 @@ const adminPath = process.env.ADMIN_URL_PATH;
 export function middleware(request) {
     const pathname = request.nextUrl.pathname;
 
-    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-        return new NextResponse(null, { status: 404 });
-    }
-
     if (adminPath && pathname === `/${adminPath}`) {
         const rewriteUrl = request.nextUrl.clone();
         rewriteUrl.pathname = "/admin";
