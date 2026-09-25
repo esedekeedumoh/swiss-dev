@@ -69,10 +69,7 @@
       ".next/static/**/*",
       "public/**/*"
     ],
-    "asar": true,
-    "asarUnpack": [
-      ".next/standalone/**/*"
-    ],
+    "asar": false,
     "npmRebuild": false,
     "buildDependenciesFromSource": false,
     "extraMetadata": {
