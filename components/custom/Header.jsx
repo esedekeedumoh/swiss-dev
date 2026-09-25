@@ -6,6 +6,7 @@ import { SessionContext } from '@/app/provider';
 import supabase from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { MessagesContext } from '@/context/MessagesContext';
+import Link from 'next/link';
 
 function Header() {
     const [logoError, setLogoError] = useState(false);
@@ -143,12 +144,12 @@ function Header() {
                                     )}
                                 </div>
                             ) : (
-                                <button 
-                                    onClick={() => supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/auth/callback` } })}
+                                <Link
+                                    href="/sign-in"
                                     className="bg-googleAnti-cloud hover:bg-gray-700 border border-gray-600 text-sm font-medium text-white px-4 py-1.5 rounded-lg transition-colors"
                                 >
                                     Sign In
-                                </button>
+                                </Link>
                             )}
                         </div>
                     </div>

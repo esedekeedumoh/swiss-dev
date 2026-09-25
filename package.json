@@ -22,7 +22,6 @@
     "@radix-ui/react-slot": "^1.1.1",
     "@supabase/supabase-js": "^2.112.3",
     "@tauri-apps/api": "^2.11.1",
-    "electron-updater": "^6.6.2",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -70,6 +69,12 @@
       ".next/static/**/*",
       "public/**/*"
     ],
+    "asar": true,
+    "asarUnpack": [
+      ".next/standalone/**/*"
+    ],
+    "npmRebuild": false,
+    "buildDependenciesFromSource": false,
     "extraMetadata": {
       "main": "electron/main.cjs"
     },

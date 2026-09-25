@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
     Bug,
     CheckCircle2,
@@ -14,6 +13,9 @@ import {
     TerminalSquare,
     X,
 } from "lucide-react";
+import { useContext, useState } from "react";
+import { SessionContext } from "@/app/provider";
+import supabase from "@/lib/supabaseClient";
 
 const activities = [
     { label: "Explorer", icon: Files },
@@ -25,6 +27,8 @@ const activities = [
 ];
 
 export function ActivityBar({ active, onChange }) {
+    const { session } = useContext(SessionContext);
+    const [accountOpen, setAccountOpen] = useState(false);
     return (
         <aside className="flex w-12 shrink-0 flex-col items-center justify-between border-r border-white/10 bg-[#090b10] py-3 text-gray-500">
             <div className="flex flex-col items-center gap-2">
@@ -41,8 +45,12 @@ export function ActivityBar({ active, onChange }) {
                 ))}
             </div>
             <div className="flex flex-col items-center gap-2">
-                <button type="button" title="Integrated Browser" className="flex h-10 w-10 items-center justify-center text-gray-500 hover:text-white"><Globe2 className="h-5 w-5" /></button>
+                <button type="button" title="Integrated Browser" onClick={() => onChange("Browser")} className={`flex h-10 w-10 items-center justify-center ${active === "Browser" ? "text-white" : "text-gray-500 hover:text-white"}`}><Globe2 className="h-5 w-5" /></button>
                 <button type="button" title="Settings" className="flex h-10 w-10 items-center justify-center text-gray-500 hover:text-white"><Settings2 className="h-5 w-5" /></button>
+                <div className="relative">
+                    <button type="button" title="Account" onClick={() => setAccountOpen((open) => !open)} className="flex h-10 w-10 items-center justify-center text-gray-500 hover:text-white"><span className="flex h-6 w-6 items-center justify-center rounded-full border border-white/20 text-[10px] font-semibold text-gray-300">{session?.user?.email?.[0]?.toUpperCase() || "?"}</span></button>
+                    {accountOpen && <div className="absolute bottom-0 left-12 z-50 w-64 border border-white/10 bg-[#171b24] py-2 shadow-2xl"><div className="border-b border-white/10 px-4 py-3"><p className="text-xs uppercase tracking-wider text-gray-500">Account</p><p className="mt-1 truncate text-sm text-white">{session?.user?.email || "Not signed in"}</p></div><button type="button" onClick={() => supabase.auth.signOut()} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-red-300 hover:bg-white/5"><span>Sign out</span></button></div>}
+                </div>
             </div>
         </aside>
     );
