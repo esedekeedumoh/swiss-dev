@@ -55,10 +55,7 @@ export default function SignInPage() {
                     <button disabled={busy} className="w-full bg-[#b9e55b] py-3 text-sm font-semibold text-[#17231e] disabled:opacity-60">{busy ? "Signing in..." : "Sign in"}</button>
                 </form>
                 <div className="my-6 flex items-center gap-3 text-xs text-gray-600"><span className="h-px flex-1 bg-white/10" />OR<span className="h-px flex-1 bg-white/10" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                    <button type="button" disabled={busy} onClick={() => signInWithProvider("google")} className="flex items-center justify-center gap-2 border border-white/10 bg-[#0c0f15] px-3 py-3 text-sm text-gray-200 hover:border-white/30 disabled:opacity-60"><span className="font-bold text-red-400">G</span> Google</button>
-                    <button type="button" disabled={busy} onClick={() => signInWithProvider("github")} className="flex items-center justify-center gap-2 border border-white/10 bg-[#0c0f15] px-3 py-3 text-sm text-gray-200 hover:border-white/30 disabled:opacity-60"><Github className="h-4 w-4" /> GitHub</button>
-                </div>
+                <button type="button" disabled={busy} onClick={() => signInWithProvider("github")} className="flex w-full items-center justify-center gap-2 border border-white/10 bg-[#0c0f15] px-3 py-3 text-sm text-gray-200 hover:border-white/30 disabled:opacity-60"><Github className="h-4 w-4" /> GitHub</button>
                 <p className="mt-8 text-center text-sm text-gray-500">New to Swiss Dev? <Link href="/register" className="text-[#b9e55b] hover:underline">Create an account</Link></p>
             </section>
         </main>
